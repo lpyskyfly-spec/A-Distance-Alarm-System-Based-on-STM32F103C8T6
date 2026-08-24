@@ -26,18 +26,6 @@ HC-SR04超声波测距模块
 
 5V电源（USB或外部电源）
 
-引脚连接
-模块	STM32F103C8T6 引脚
-HC-SR04 Trig	PA0（或其他可用GPIO）
-HC-SR04 Echo	PA8（TIM1_CH1）和 PA9（TIM1_CH2）¹
-OLED SDA	PB7（I2C1_SDA）
-OLED SCL	PB6（I2C1_SCL）
-蜂鸣器正极	PB12
-蜂鸣器负极	GND
-VCC（HC-SR04、OLED、蜂鸣器）	5V
-GND（所有模块）	GND
-¹ 将Echo信号同时连接到TIM1_CH1（PA8）和TIM1_CH2（PA9），分别捕获上升沿和下降沿，这样避免了在单个通道上反复切换捕获边沿，使时序更加稳定。如果希望简化，也可以只使用一个通道，在软件中动态修改捕获极性。
-
 工作原理
 单片机向HC-SR04的Trig引脚发送一个10 µs的高电平触发脉冲。
 
@@ -68,29 +56,6 @@ TIM1配置为输入捕获模式，启用两个通道。
 
 使用简单的软件延时或定时器中断产生触发脉冲并控制测量周期。
 
-关键配置代码
-c
-// TIM1 配置（简化）
-htim1.Instance = TIM1;
-htim1.Init.Prescaler = 71;        // 定时器时钟1 MHz（72 MHz / 72）
-htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-htim1.Init.Period = 0xFFFF;       // 最大计数周期
-htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-htim1.Init.RepetitionCounter = 0;
-
-// 通道1输入捕获（上升沿）
-sConfigIC.ICPolarity = TIM_ICPOLARITY_RISING;
-sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-sConfigIC.ICFilter = 0;
-HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_1);
-
-// 通道2输入捕获（下降沿）
-sConfigIC.ICPolarity = TIM_ICPOLARITY_FALLING;
-HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_2);
-
-HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_1);
-HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_2);
 编译与烧录
 使用keil5打开工程。
 
